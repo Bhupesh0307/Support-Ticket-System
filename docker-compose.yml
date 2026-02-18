@@ -1,0 +1,38 @@
+services:
+
+  db:
+    image: postgres:15
+    container_name: tickets_db
+    environment:
+      POSTGRES_DB: tickets_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+
+  backend:
+    build: ./backend
+    container_name: tickets_backend
+    command: >
+      sh -c "
+      echo 'Waiting for database...' &&
+      sleep 5 &&
+      python manage.py migrate &&
+      python manage.py runserver 0.0.0.0:8000
+      "
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    env_file:
+      - .env
+
+  frontend:
+    build: ./frontend
+    container_name: tickets_frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
